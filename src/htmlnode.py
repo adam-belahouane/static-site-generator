@@ -21,3 +21,18 @@ class HTMLNode:
 
 
 
+class LeafNode(HTMLNode):
+    def __init__(self, tag = None, value = None, props = None):
+        if value is None:
+            raise ValueError("Value cannot be None for LeafNode")
+        super().__init__(tag, value, None, props)
+
+    def to_html(self):
+        html = ""
+        if self.tag:
+            html += f"<{self.tag}{self.props_to_html()}>"
+        html += self.value
+        if self.tag:
+            html += f"</{self.tag}>"
+        return html
+
