@@ -14,6 +14,8 @@ class HTMLNode:
 
     def props_to_html(self):
         html = ''
+        if not self.props:
+            return html
         for prop in self.props:
             html = html + " " + prop + f'="{self.props[prop]}"'
     
@@ -36,3 +38,20 @@ class LeafNode(HTMLNode):
             html += f"</{self.tag}>"
         return html
 
+
+
+class ParentNode(HTMLNode):
+    def __init__(self, tag = None, children = None):
+        if not tag:
+            raise ValueError("No Tag providied")
+        if not children:
+            raise ValueError("No kids")
+        super().__init__(tag, None, children, None)
+    
+    def to_html(self):
+        html = f"<{self.tag}>"
+        for child in self.children:
+            html = html + child.to_html()
+        html += f"</{self.tag}>"
+        return html
+        
