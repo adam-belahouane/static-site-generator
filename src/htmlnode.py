@@ -8,7 +8,7 @@ class HTMLNode:
     
     def __repr__(self):
         return F"{self.tag}, {self.value}, {self.children}, {self.props}"
-    
+
     def to_html(self):
         raise NotImplementedError("not put in place")
 
@@ -54,4 +54,26 @@ class ParentNode(HTMLNode):
             html = html + child.to_html()
         html += f"</{self.tag}>"
         return html
-        
+
+def text_node_to_html_node(text_node):
+    tag, value, props = 0, None, None
+    if text_node.text:
+        value = text_node.text
+    if text_node.text_type == "text":
+        tag = None
+    if text_node.text_type == "bold":
+        tag = "b"
+    if text_node.text_type == "italic":
+        tag = "i"
+    if text_node.text_type == "code":
+        tag = "code"
+    if text_node.text_type == "link":
+        tag = "a"
+        props = {"href" : f"{text_node.url}"}
+    if text_node.text_type == "image":
+        tag = "img"
+        props =  {"src" : f"{text_node.url}", "alt" : "this is a img"}
+    if tag == 0:
+        raise Exception("invalid tag")
+    
+    return LeafNode(tag, value, props)        
