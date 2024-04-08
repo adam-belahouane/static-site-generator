@@ -2,7 +2,7 @@ import unittest
 
 from markdowntohtml import extract_markdown_images
 from markdowntohtml import extract_markdown_links
-from markdowntohtml import split_nodes_image, split_nodes_link
+from markdowntohtml import split_nodes_image, split_nodes_link, text_to_textnodes
 from textnode import TextNode
 
 class TestImgandLinkFunctions(unittest.TestCase):
@@ -43,6 +43,23 @@ class TestImgandLinkFunctions(unittest.TestCase):
             ),
                     ]
         self.assertEqual(result, nodelist)
+    
+    def test_text_to_textnode(self):
+        result = text_to_textnodes("This is **text** with an *italic* word and a `code block` and an ![image](https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/zjjcJKZ.png) and a [link](https://boot.dev)")
+        test_case = [
+                    TextNode("This is ", "text"),
+                    TextNode("text", "bold"),
+                    TextNode(" with an ", "text"),
+                    TextNode("italic", "italic"),
+                    TextNode(" word and a ", "text"),
+                    TextNode("code block", "code"),
+                    TextNode(" and an ", "text"),
+                    TextNode("image", "image", "https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/zjjcJKZ.png"),
+                    TextNode(" and a ", "text"),
+                    TextNode("link", "link", "https://boot.dev"),
+                ]
+        self.assertEqual(result, test_case)
+
 
     
 
