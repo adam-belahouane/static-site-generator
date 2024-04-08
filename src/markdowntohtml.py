@@ -1,5 +1,6 @@
 from textnode import TextNode
 import re
+from htmlnode import LeafNode
 
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
     new_list = []
@@ -27,6 +28,25 @@ def split_nodes_image(old_nodes):
     new_nodes = []
     for node in old_nodes:
         matches = extract_markdown_images(node.text)
-        li = node.text.split(f"![{matches[0]}]({matches[1]})")
-        print(li)
+        li = node.text
+        for match in matches:
+            li = li.split(f"![{match[0]}]({match[1]})")
+            new_nodes.append(TextNode(li[0], "text"))
+            new_nodes.append(TextNode(match[0], "image", match[1]))
+            del li[0]
+            li = " ".join(li)
+    return new_nodes
+
+def split_nodes_link(old_nodes):
+    new_nodes = []
+    for node in old_nodes:
+        li = node.text
+        matches = extract_markdown_links(li)
+        for match in matches:
+            li = li.split(f"[{match[0]}]({match[1]})")
+            new_nodes.append(TextNode(li[0], "text"))
+            new_nodes.append(TextNode(match[0], "link", match[1]))
+            del li[0]
+            li = " ".join(li)
+    return new_nodes
 
