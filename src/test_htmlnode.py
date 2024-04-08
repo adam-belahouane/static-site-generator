@@ -7,7 +7,7 @@ from htmlnode import HTMLNode
 class TestHTMLNode(unittest.TestCase):
     def test_reqr(self):
         node = HTMLNode("p", "this is a test", None, {"href": "https://www.google.com", "target": "_blank"})
-        print(repr(node))
+        # print(repr(node))
     
     def test_props_to_html(self):
         node = HTMLNode("p", "this is a test", None, {"href": "https://www.google.com", "target": "_blank"})

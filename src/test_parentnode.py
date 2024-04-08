@@ -12,7 +12,6 @@ class TestLeafNode(unittest.TestCase):
         LeafNode("i", "italic text"),
         LeafNode(None, "Normal text"),
     ])
-        print(repr(node))
 
     def test_to_html(self):
         node = ParentNode("p",
