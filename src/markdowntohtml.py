@@ -2,6 +2,13 @@ from textnode import TextNode
 import re
 from htmlnode import LeafNode
 
+block_type_paragraph = "paragraph"
+block_type_heading = "heading"
+block_type_code = "code"
+block_type_quote = "quote"
+block_type_unordered_list = "unordered list"
+block_type_ordered_list = "ordered list"
+
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
     new_list = []
     for node in old_nodes:
@@ -85,5 +92,27 @@ def text_to_textnodes(text):
     nodes = split_nodes_image(nodes)
     nodes = split_nodes_link(nodes)
     return nodes
+
+def markdown_to_blocks(markdown):
+    raw_blocks = markdown.split("\n\n")
+
+    raw_blocks = [block.strip() for block in raw_blocks if block.strip()]
+
+    raw_blocks = ['\n'.join(line.lstrip() for line in block.split('\n')) for block in raw_blocks]
+
+    return raw_blocks
+
+def block_to_block_type(block):
+    if block.startswith("#"):
+        return block_type_heading
+    if block.startswith("```") and block.endswith("```"):
+        return block_type_code
+    if all(line.startswith(">") for line in block.split("\n")):
+        return block_type_quote
+    if all(line.startswith(("* ", "- ")) for line in block.split("\n")):
+        return block_type_unordered_list
+    if all(line.startswith(f"{i}. ") for i, line in enumerate(block.split("\n"), 1)):
+        return block_type_ordered_list
+    return block_type_paragraph
 
 
