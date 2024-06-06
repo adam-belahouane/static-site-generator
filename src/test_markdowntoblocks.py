@@ -1,5 +1,5 @@
 import unittest
-from markdowntohtml import markdown_to_blocks
+from markdowntohtml import markdown_to_blocks, markdown_to_html_node
 from markdowntohtml import block_to_block_type, block_type_code, block_type_heading, block_type_ordered_list, block_type_paragraph, block_type_quote, block_type_unordered_list
 
 class TestMarkdownToBlocks(unittest.TestCase):
@@ -54,6 +54,38 @@ class TestMarkdownBlockTypes(unittest.TestCase):
     def test_paragraph(self):
         self.assertEqual(block_type_paragraph, block_to_block_type("This is a normal paragraph."))
         self.assertEqual(block_type_paragraph, block_to_block_type("Another example of a paragraph\nwith multiple lines."))
+    
+    def test_paragraph_html(self):
+        md = """
+This is **bolded** paragraph
+text in a p
+tag here
+
+"""
+
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><p>This is <b>bolded</b> paragraph text in a p tag here</p></div>",
+        )
+
+    def test_paragraphs(self):
+        md = """
+This is **bolded** paragraph
+text in a p
+tag here
+
+This is another paragraph with *italic* text and `code` here
+
+"""
+
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        self.assertEqual(
+            html,
+            "<div><p>This is <b>bolded</b> paragraph text in a p tag here</p><p>This is another paragraph with <i>italic</i> text and <code>code</code> here</p></div>",
+        )
 
 if __name__ == "__main__":
     unittest.main()

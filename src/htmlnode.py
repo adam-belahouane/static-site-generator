@@ -1,3 +1,10 @@
+text_type_text = "text"
+text_type_bold = "bold"
+text_type_italic = "italic"
+text_type_code = "code"
+text_type_link = "link"
+text_type_image = "image"
+
 class HTMLNode:
 
     def __init__(self, tag = None, value = None, children =None, props = None):
@@ -41,39 +48,33 @@ class LeafNode(HTMLNode):
 
 
 class ParentNode(HTMLNode):
-    def __init__(self, tag = None, children = None):
-        if not tag:
-            raise ValueError("No Tag providied")
-        if not children:
-            raise ValueError("No kids")
-        super().__init__(tag, None, children, None)
-    
+    def __init__(self, tag, children, props=None):
+        super().__init__(tag, None, children, props)
+
     def to_html(self):
-        html = f"<{self.tag}>"
+        if self.tag is None:
+            raise ValueError("Invalid HTML: no tag")
+        if self.children is None:
+            raise ValueError("Invalid HTML: no children")
+        children_html = ""
         for child in self.children:
-            html = html + child.to_html()
-        html += f"</{self.tag}>"
-        return html
+            children_html += child.to_html()
+        return f"<{self.tag}{self.props_to_html()}>{children_html}</{self.tag}>"
+
+    def __repr__(self):
+        return f"ParentNode({self.tag}, children: {self.children}, {self.props})"
 
 def text_node_to_html_node(text_node):
-    tag, value, props = 0, None, None
-    if text_node.text:
-        value = text_node.text
-    if text_node.text_type == "text":
-        tag = None
-    if text_node.text_type == "bold":
-        tag = "b"
-    if text_node.text_type == "italic":
-        tag = "i"
-    if text_node.text_type == "code":
-        tag = "code"
-    if text_node.text_type == "link":
-        tag = "a"
-        props = {"href" : f"{text_node.url}"}
-    if text_node.text_type == "image":
-        tag = "img"
-        props =  {"src" : f"{text_node.url}", "alt" : "this is a img"}
-    if tag == 0:
-        raise Exception("invalid tag")
-    
-    return LeafNode(tag, value, props)        
+    if text_node.text_type == text_type_text:
+        return LeafNode(None, text_node.text)
+    if text_node.text_type == text_type_bold:
+        return LeafNode("b", text_node.text)
+    if text_node.text_type == text_type_italic:
+        return LeafNode("i", text_node.text)
+    if text_node.text_type == text_type_code:
+        return LeafNode("code", text_node.text)
+    if text_node.text_type == text_type_link:
+        return LeafNode("a", text_node.text, {"href": text_node.url})
+    if text_node.text_type == text_type_image:
+        return LeafNode("img", "", {"src": text_node.url, "alt": text_node.text})
+    raise ValueError(f"Invalid text type: {text_node.text_type}")     
