@@ -1,6 +1,8 @@
 from textnode import TextNode
 import os
 import shutil
+import stat
+from markdowntohtml import markdown_to_html_node
 
 def copy_if_file(static_path,public_path,li):
         for item in li:
@@ -26,10 +28,35 @@ def copy_files_to_public():
 
     return "we did it"
 
-def main():
-    text = TextNode("test", "bold", "www.test.com")
-    print(copy_files_to_public())
+def extract_title(markdown):
+    with open(markdown) as f:
+        read_data = f.read()
+        if read_data.startswith("#"):
+            title = read_data.split("\n")[0]
+            title = title.strip("# ")
+        f.close()
+    return title
 
+def generate_page(from_path, template_path, dest_path):
+    print(f"Generating page from {from_path} to {dest_path} using {template_path}")
+    with open(from_path) as fp:
+        from_path_data = fp.read()
+        fp.close()
+    with open(template_path) as tp:
+        template_path_data = tp.read()
+        tp.close()
+    contents_data = markdown_to_html_node(from_path_data).to_html()
+    title_data = extract_title(from_path)
+    # print(contents_data, title_data)
+    template_path_data = template_path_data.replace("{{ Title }}", title_data)
+    template_path_data = template_path_data.replace("{{ Content }}", contents_data)
+    with open("./public/index.html", "w") as index_html:
+        index_html.write(template_path_data)
+        index_html.close()
+
+def main():
+    copy_files_to_public()
+    generate_page("./content/index.md", "./template.html", "./public")
     
 
 main()
