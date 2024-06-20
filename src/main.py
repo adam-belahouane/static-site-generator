@@ -1,63 +1,80 @@
 from textnode import TextNode
 import os
 import shutil
-import stat
+from pathlib import Path
 from markdowntohtml import markdown_to_html_node
 
-def copy_if_file(static_path,public_path,li):
-        for item in li:
-            path_to_copy = static_path + "/" + item
-            where_im_copying_too = public_path
-            if os.path.isfile(path_to_copy):
-                shutil.copy(path_to_copy, where_im_copying_too)
-            if os.path.isdir(path_to_copy):
-                new_public_path = where_im_copying_too + "/" + item
-                os.mkdir(new_public_path)
-                copy_if_file(path_to_copy, new_public_path, os.listdir(path_to_copy))
+dir_path_static = "./static"
+dir_path_public = "./public"
+dir_path_content = "./content"
+template_path = "./template.html"
 
-def copy_files_to_public():
-    shutil.rmtree("/home/adam_belahouane/workspace/github.com/adam-belahouane/static-site-generator/public")
-    static_path = "/home/adam_belahouane/workspace/github.com/adam-belahouane/static-site-generator/static"
-    public_path = "/home/adam_belahouane/workspace/github.com/adam-belahouane/static-site-generator/public"
-    if not os.path.exists(public_path):
-        os.mkdir(public_path)
 
-    if os.path.exists(static_path):
-        contents_of_dir = os.listdir(static_path)
-        copy_if_file(static_path, public_path, contents_of_dir)
+def copy_files_recursive(source_dir_path, dest_dir_path):
+    if not os.path.exists(dest_dir_path):
+        os.mkdir(dest_dir_path)
 
-    return "we did it"
+    for filename in os.listdir(source_dir_path):
+        from_path = os.path.join(source_dir_path, filename)
+        dest_path = os.path.join(dest_dir_path, filename)
+        print(f" * {from_path} -> {dest_path}")
+        if os.path.isfile(from_path):
+            shutil.copy(from_path, dest_path)
+        else:
+            copy_files_recursive(from_path, dest_path)
 
-def extract_title(markdown):
-    with open(markdown) as f:
-        read_data = f.read()
-        if read_data.startswith("#"):
-            title = read_data.split("\n")[0]
-            title = title.strip("# ")
-        f.close()
-    return title
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+    for filename in os.listdir(dir_path_content):
+        from_path = os.path.join(dir_path_content, filename)
+        dest_path = os.path.join(dest_dir_path, filename)
+        if os.path.isfile(from_path):
+            dest_path = Path(dest_path).with_suffix(".html")
+            generate_page(from_path, template_path, dest_path)
+        else:
+            generate_pages_recursive(from_path, template_path, dest_path)
+
 
 def generate_page(from_path, template_path, dest_path):
-    print(f"Generating page from {from_path} to {dest_path} using {template_path}")
-    with open(from_path) as fp:
-        from_path_data = fp.read()
-        fp.close()
-    with open(template_path) as tp:
-        template_path_data = tp.read()
-        tp.close()
-    contents_data = markdown_to_html_node(from_path_data).to_html()
-    title_data = extract_title(from_path)
-    # print(contents_data, title_data)
-    template_path_data = template_path_data.replace("{{ Title }}", title_data)
-    template_path_data = template_path_data.replace("{{ Content }}", contents_data)
-    with open("./public/index.html", "w") as index_html:
-        index_html.write(template_path_data)
-        index_html.close()
+    print(f" * {from_path} {template_path} -> {dest_path}")
+    from_file = open(from_path, "r")
+    markdown_content = from_file.read()
+    from_file.close()
+
+    template_file = open(template_path, "r")
+    template = template_file.read()
+    template_file.close()
+
+    node = markdown_to_html_node(markdown_content)
+    html = node.to_html()
+
+    title = extract_title(markdown_content)
+    template = template.replace("{{ Title }}", title)
+    template = template.replace("{{ Content }}", html)
+
+    dest_dir_path = os.path.dirname(dest_path)
+    if dest_dir_path != "":
+        os.makedirs(dest_dir_path, exist_ok=True)
+    to_file = open(dest_path, "w")
+    to_file.write(template)
+
+
+def extract_title(md):
+    lines = md.split("\n")
+    for line in lines:
+        if line.startswith("# "):
+            return line[2:]
+    raise ValueError("No title found")
 
 def main():
-    copy_files_to_public()
-    generate_page("./content/index.md", "./template.html", "./public")
-    
+    print("Deleting public directory...")
+    if os.path.exists(dir_path_public):
+        shutil.rmtree(dir_path_public)
+
+    print("Copying static files to public directory...")
+    copy_files_recursive(dir_path_static, dir_path_public)
+
+    print("Generating content...")
+    generate_pages_recursive(dir_path_content, template_path, dir_path_public)
 
 main()
 
